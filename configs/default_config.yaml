@@ -1,0 +1,49 @@
+# general parameters
+file_path: 'envs/Reacher_Linux_Multi_NoVis/Reacher.x86_64'
+# file_path: 'envs/Reacher_Single.app'
+model_file: 'models/first_ddpg.pkl'
+graph_file: 'training-performance.png'
+
+###########################################################################
+# valid values include 'random', 'ddpg'
+alg: 'ddpg'
+###########################################################################
+
+# parameters for printing and controlling learning time
+frame_time: 0.00
+max_episodes: 2500
+max_iterations: 10000
+t_update: 10  # number of time steps to take before update
+num_updates: 10 # number of network updates to complete in a time step
+
+# model parameters
+model_params:
+  # training parameters
+  gamma: 0.99
+  actor_alpha: 0.0001
+  critic_alpha: 0.0005
+  t_freq: 100
+  tau: 0.001
+
+  # parameters for the Ornstein-Uhlenbeck noise process
+  use_ornstein: True
+  theta: 0.3
+  sigma: 0.3
+  mu: 0.0
+  # general noise
+  epsilon: 1.0
+  epsilon_decay: 0.9995
+  epsilon_min: 0.01
+  noise_variance: 0.5
+
+  # parameters for the replay buffer
+  buffer_size: 1000000
+  batch_size: 256
+
+  # architecture
+  inter_dims: [256, 512]
+  use_batch_norm: False
+
+  # parameters specific to PPO
+  eps_clip: 0.05
+  variance_decay: 0.9995
