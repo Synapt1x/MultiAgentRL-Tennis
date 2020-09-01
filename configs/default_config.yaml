@@ -1,12 +1,12 @@
 # general parameters
-file_path: 'envs/Reacher_Linux_Multi_NoVis/Reacher.x86_64'
+file_path: 'envs/Tennis_Linux_NoVis/Tennis.x86_64'
 # file_path: 'envs/Reacher_Single.app'
 model_file: 'models/first_ddpg.pkl'
 graph_file: 'training-performance.png'
 
 ###########################################################################
 # valid values include 'random', 'ddpg'
-alg: 'ddpg'
+alg: 'random'
 ###########################################################################
 
 # parameters for printing and controlling learning time

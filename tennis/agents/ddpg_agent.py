@@ -19,11 +19,11 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from control.agents.agent import MainAgent
-from control.torch_models.actor_net import ActorNetwork
-from control.torch_models.critic_net import CriticNetwork
-from control.replay_buffer import ReplayBuffer
-from control import utils
+from tennis.agents.agent import MainAgent
+from tennis.torch_models.actor_net import ActorNetwork
+from tennis.torch_models.critic_net import CriticNetwork
+from tennis.replay_buffer import ReplayBuffer
+from tennis import utils
 
 
 class DDPGAgent(MainAgent):

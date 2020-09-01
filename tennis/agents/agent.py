@@ -17,8 +17,9 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from control.replay_buffer import ReplayBuffer
-from control import utils
+from tennis.replay_buffer import ReplayBuffer
+from tennis import utils
+
 
 class MainAgent:
     """
@@ -85,17 +86,28 @@ class MainAgent:
         """
         return None
 
+    def get_status(self, verbose, time_diff):
+        """
+        Get the current state of the agent as it's training.
+        """
+        if verbose:
+            print('----------------------------------')
+            print(f'* Time taken : {time_diff} s')
+            print('----------------------------------')
+
+        return 0.0, 0.0
+
     def _init_noise(self, noise_variance):
         """
         Get the noise process specified.
         """
         if self.use_ornstein:
-            from control.noise_processes.noise_process import OrnsteinUhlenbeck
+            from tennis.noise_processes.noise_process import OrnsteinUhlenbeck
 
             return OrnsteinUhlenbeck(theta=self.theta, sigma=self.sigma,
                                      action_size=self.action_size)
         else:
-            from control.noise_processes.normal_noise import NormalNoise
+            from tennis.noise_processes.normal_noise import NormalNoise
 
             return NormalNoise(epsilon=self.epsilon,
                                epsilon_decay=self.epsilon_decay,

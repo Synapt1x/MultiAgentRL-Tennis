@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from control.utils import compute_bound
+from tennis.utils import compute_bound
 
 
 class CriticNetwork(nn.Module):
