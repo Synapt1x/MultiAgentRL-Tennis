@@ -69,12 +69,12 @@ class TennisMain:
         state_size = len(env_info.vector_observations[0])
         action_size = self.brain.vector_action_space_size
 
-        if alg.lower() == 'ddpg':
+        if alg.lower() == 'maddpg':
             # init DDPG
-            from tennis.agents.ddpg_agent import DDPGAgent
-            return DDPGAgent(**model_params, state_size=state_size,
-                             action_size=action_size, num_instances=num_agents,
-                             t_update=t_update, num_updates=num_updates)
+            from tennis.agents.maddpg_agent import MADDPGAgent
+            return MADDPGAgent(**model_params, state_size=state_size,
+                               action_size=action_size, num_instances=num_agents,
+                               t_update=t_update, num_updates=num_updates)
         elif alg.lower() == 'd4pg':
             # init D4PG
             from tennis.agents.d4pg_agent import D4PGAgent

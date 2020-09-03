@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Custom RL agent for learning how to navigate through the Unity-ML environment
-provided in the project. This agent specifically implements the DDPG algorithm.
+provided in the project. This agent specifically implements the MADDPG
+algorithm.
 
 This particularly aims to learn how to solve a multi-agent learning problem.
 
@@ -24,9 +25,9 @@ from tennis.replay_buffer import ReplayBuffer
 from tennis import utils
 
 
-class DDPGAgent(MainAgent):
+class MADDPGAgent(MainAgent):
     """
-    This model contains my code for the DDPG agent to learn and be able to
+    This model contains my code for the MADDPG agent to learn and be able to
     interact through the continuous control problem.
     """
 
@@ -35,8 +36,8 @@ class DDPGAgent(MainAgent):
         # first add additional parameters specific to DDPG
 
         # initialize as in base model
-        super(DDPGAgent, self).__init__(state_size, action_size,
-                                        num_instances, seed, **kwargs)
+        super(MADDPGAgent, self).__init__(state_size, action_size,
+                                          num_instances, seed, **kwargs)
 
     def _init_alg(self):
         """
@@ -175,7 +176,8 @@ class DDPGAgent(MainAgent):
 
         return action_vals
 
-    def compute_loss(self, states, actions, next_states, rewards, dones):
+    def compute_loss(self, states, actions, next_states, rewards, dones,
+                     obs, next_obs, agent_num):
         """
         Compute the loss based on the information provided and the value /
         policy parameterizations used in the algorithm.
@@ -201,39 +203,41 @@ class DDPGAgent(MainAgent):
             Loss value (with grad) based on target and Q-value estimates.
         """
         # compute target and critic values for TD loss
-        next_actor_actions = self.actor_target(next_states)
-        critic_targets = self.critic_target(next_states, next_actor_actions)
+        next_actor_actions = self.actor_targets[agent_num](next_obs)
+        #TODO: Need to figure out how to handle batch size if using obs
+        critic_targets = self.critic_targets[agent_num](next_states,
+                                                        next_actor_actions)
 
         # compute loss for critic
         done_v = 1 - dones
         target_vals = rewards + self.gamma * critic_targets.squeeze(1) * done_v
-        critic_vals = self.critic(states, actions)
+        critic_vals = self.critics[agent_num](states, actions)
 
         loss = F.mse_loss(target_vals, critic_vals)
 
         # then compute loss for actor
-        cur_actor_actions = self.actor(states)
-        policy_loss = self.critic(states, cur_actor_actions)
+        cur_actor_actions = self.actors[agent_num](obs)
+        policy_loss = self.critics[agent_num](states, cur_actor_actions)
         policy_loss = -policy_loss.mean()
 
         return loss, policy_loss
 
-    def train_critic(self, loss):
+    def train_critic(self, loss, agent_num):
         """
         """
-        self.critic.train()
-        self.critic_optimizer.zero_grad()
+        self.critic[agent_num].train()
+        self.critic_optimizers[agent_num].zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 1)
-        self.critic_optimizer.step()
+        torch.nn.utils.clip_grad_norm_(self.critics[agent_num].parameters(), 1)
+        self.critic_optimizer[agent_num].step()
 
-    def train_actor(self, policy_loss):
+    def train_actor(self, policy_loss, agent_num):
         """
         """
-        self.actor.train()
-        self.actor_optimizer.zero_grad()
+        self.actors[agent_num].train()
+        self.actor_optimizers[agent_num].zero_grad()
         policy_loss.backward()
-        self.actor_optimizer.step()
+        self.actor_optimizers[agent_num].step()
 
     def learn(self, states, actions, next_states, rewards, dones):
         """
@@ -267,18 +271,25 @@ class DDPGAgent(MainAgent):
             actor_losses = []
 
             for _ in range(self.num_updates):
-                s, a, s_p, r, d = self.memory.sample()
+                for agent_i in range(self.num_instances):
+                    s, a, s_p, r, d = self.memory.sample()
 
-                loss, policy_loss = self.compute_loss(s, a, s_p, r, d)
+                    state_t = utils.to_tensor(states[agent_i])
+                    next_state_t = utils.to_tensor(next_states[agent_i])
 
-                # train the critic and actor separately
-                self.train_critic(loss)
-                self.train_actor(policy_loss)
+                    loss, policy_loss = self.compute_loss(s, a, s_p, r, d,
+                                                          state_t,
+                                                          next_state_t,
+                                                          agent_i)
 
-                critic_losses.append(loss.item())
-                actor_losses.append(policy_loss.item())
+                    # train the critic and actor separately
+                    self.train_critic(loss, agent_i)
+                    self.train_actor(policy_loss, agent_i)
 
-                self.step()
+                    self.step(agent_i)
+
+                    critic_losses.append(loss.item())
+                    actor_losses.append(policy_loss.item())
 
             self.critic_loss_avgs.append(np.mean(critic_losses))
             self.actor_loss_avgs.append(np.mean(actor_losses))
@@ -286,16 +297,15 @@ class DDPGAgent(MainAgent):
         # update time step counter
         self.t += 1
 
-    def step(self):
+    def step(self, agent_num):
         """
         Update state of the agent and take a step through the learning process
         to reflect experiences have been acquired and/or learned from.
         """
         # update actor target network
-        self.actor_target = utils.copy_weights(self.actor, self.actor_target,
-                                               self.tau)
+        self.actor_targets[agent_num] = utils.copy_weights(
+            self.actors[agent_num], self.actor_targets[agent_num], self.tau)
 
         # update critic target network
-        self.critic_target = utils.copy_weights(self.critic,
-                                                self.critic_target,
-                                                self.tau)
+        self.critic_targets[agent_num] = utils.copy_weights(
+            self.critics[agent_num], self.critic_targets[agent_num], self.tau)
