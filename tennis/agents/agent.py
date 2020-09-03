@@ -17,6 +17,8 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+from tennis.torch_models.actor_net import ActorNetwork
+from tennis.torch_models.critic_net import CriticNetwork
 from tennis.replay_buffer import ReplayBuffer
 from tennis import utils
 
@@ -85,6 +87,30 @@ class MainAgent:
         Initialize the algorithm.
         """
         return None
+
+    def _init_actor(self):
+        """
+        Initialize actor network.
+        """
+        actor = ActorNetwork(self.state_size, self.action_size,
+                             self.inter_dims).to(self.device)
+        actor_target = ActorNetwork(self.state_size, self.action_size,
+                                    self.inter_dims).to(self.device)
+        actor_target = utils.copy_weights(actor, actor_target)
+
+        return actor, actor_target
+
+    def _init_critic(self):
+        """
+        Initialize actor network.
+        """
+        critic = CriticNetwork(self.state_size, self.action_size,
+                               self.inter_dims).to(self.device)
+        critic_target = CriticNetwork(self.state_size, self.action_size,
+                                      self.inter_dims).to(self.device)
+        critic_target = utils.copy_weights(critic, critic_target)
+
+        return critic, critic_target
 
     def get_status(self, verbose, time_diff):
         """

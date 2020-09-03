@@ -58,7 +58,10 @@ def to_tensor(in_arr, device=torch.device('cpu'), dtype='float'):
     """
     Convert the provided array to a torch tensor.
     """
-    tensor = torch.from_numpy(in_arr)
+    if isinstance(in_arr, list):
+        tensor = torch.stack(in_arr)
+    else:
+        tensor = torch.from_numpy(in_arr)
 
     if dtype == 'float':
         tensor = tensor.float()

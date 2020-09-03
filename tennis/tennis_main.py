@@ -272,9 +272,16 @@ class TennisMain:
 
         while iteration < self.max_iterations:
             # first have the agent act and evaluate state
-            actions = self.agent.get_action(utils.to_tensor(states),
-                                            in_train=False)
-            np_actions = actions.cpu().numpy()
+            np_actions = np.zeros((self.agent.num_instances,
+                                   self.agent.action_size))
+            raw_actions = []
+            for i, state_i in enumerate(states):
+                actions_i = self.agent.get_action(utils.to_tensor(state_i),
+                                                  agent_num=i,
+                                                  in_train=False)
+                raw_actions.append(actions_i)
+                np_actions[i] = actions_i.numpy()
+            actions = utils.to_tensor(raw_actions)
             env_info = self.env.step(np_actions)[self.brain_name]
             next_states, rewards, dones = utils.eval_state(env_info)
 

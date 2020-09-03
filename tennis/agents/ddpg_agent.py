@@ -20,8 +20,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from tennis.agents.agent import MainAgent
-from tennis.torch_models.actor_net import ActorNetwork
-from tennis.torch_models.critic_net import CriticNetwork
 from tennis.replay_buffer import ReplayBuffer
 from tennis import utils
 
@@ -44,29 +42,47 @@ class DDPGAgent(MainAgent):
         """
         Initialize the algorithm based on what algorithm is specified.
         """
-        # initialize the actor and critics separately
-        self.actor = ActorNetwork(self.state_size, self.action_size,
-                                  self.inter_dims).to(self.device)
-        self.actor_target = ActorNetwork(self.state_size, self.action_size,
-                                         self.inter_dims).to(self.device)
-        self.actor_target = utils.copy_weights(self.actor, self.actor_target)
+        self.actors = []
+        self.actor_targets = []
+        self.critics = []
+        self.critic_targets = []
+        self.actor_optimizers = []
+        self.critic_optimizers = []
 
-        self.critic = CriticNetwork(self.state_size, self.action_size,
-                                    self.inter_dims).to(self.device)
-        self.critic_target = CriticNetwork(self.state_size, self.action_size,
-                                           self.inter_dims).to(self.device)
-        self.critic_target = utils.copy_weights(self.critic, self.critic_target)
+        # initialize networks separately for each agent
+        for network_i in range(self.num_instances):
+            actor, actor_target = self._init_actor()
+            critic, critic_target = self._init_critic()
 
-        # initializer optimizers
-        self.actor_optimizer = optim.Adam(self.actor.parameters(),
-                                          lr=self.actor_alpha)
-        self.critic_optimizer = optim.Adam(self.critic.parameters(),
-                                           lr=self.critic_alpha,
-                                           eps=1e-4)
+            # store networks for this agent
+            self.actors.append(actor)
+            self.actor_targets.append(actor_target)
+            self.critics.append(critic_target)
+            self.critic_targets.append(critic_target)
+
+            # initializer optimizers
+            self.actor_optimizers.append(optim.Adam(actor.parameters(),
+                                                    lr=self.actor_alpha))
+            self.critic_optimizers.append(optim.Adam(critic.parameters(),
+                                                     lr=self.critic_alpha))
 
         # initialize the replay buffer
         self.memory = ReplayBuffer(self.buffer_size, self.batch_size,
                                    seed=self.seed)
+
+    def _set_agents_eval(self):
+        """
+        Set the actor for each agent to evaluation mode.
+        """
+        for actor_i in range(self.num_instances):
+            self.actors[actor_i].eval()
+
+    def _set_agents_train(self):
+        """
+        Set the actor for each agent to training mode.
+        """
+        for actor_i in range(self.num_instances):
+            self.actors[actor_i].train()
 
     def get_status(self, verbose, time_diff):
         """
@@ -125,15 +141,14 @@ class DDPGAgent(MainAgent):
         """
         Sample noise to introduce randomness into the action selection process.
         """
-        noise_vals = np.zeros((self.num_instances, self.action_size))
-        for agent in range(self.num_instances):
-            noise_vals[agent] = self.noise.sample() * self.epsilon
+        noise_vals = np.zeros((1, self.action_size))
+        noise_vals = self.noise.sample() * self.epsilon
         #self.noise.step()
         noise_vals = torch.from_numpy(noise_vals).float().to(self.device)
 
         return noise_vals
 
-    def get_action(self, states, in_train=True):
+    def get_action(self, states, agent_num, in_train=True):
         """
         Extract the action values to be used in the environment based on the
         actor network along with a Ornstein-Uhlenbeck noise process.
@@ -150,12 +165,13 @@ class DDPGAgent(MainAgent):
             Integer indicating the action selected by the agent based on the
             states provided.
         """
-        self.actor.eval()
+        self.actors[agent_num].eval()
         with torch.no_grad():
             noise_vals = self.get_noise()
-            action_vals = self.actor(states.to(self.device)) + noise_vals
+            raw_actions = self.actors[agent_num](states.to(self.device))
+            action_vals = raw_actions + noise_vals
             action_vals = torch.clamp(action_vals, -1, 1)
-        self.actor.train()
+        self.actors[agent_num].train()
 
         return action_vals
 
