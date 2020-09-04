@@ -59,7 +59,7 @@ class MADDPGAgent(MainAgent):
             self.actor_optimizers.append(optim.Adam(actor.parameters(),
                                                     lr=self.actor_alpha))
 
-        self.critic, self.critic_target = self._init_critic()
+        self.critic, self.critic_target = self._init_joint_critic()
         self.critic_optimizer = optim.Adam(self.critic.parameters(),
                                            lr=self.critic_alpha)
 
@@ -173,6 +173,37 @@ class MADDPGAgent(MainAgent):
 
         return action_vals
 
+    def get_current_actions(self, states):
+        """
+        Extract the action values from each agents actor using the current
+        states being evaluated in a batch.
+
+        Parameters
+        ----------
+        states: np.array/torch.Tensor
+            Array or Tensor singleton or batch containing states information
+            either in the shape (1, 33) or (batch_size, 33)
+
+        Returns
+        -------
+        int
+            Integer indicating the action selected by the agent based on the
+            states provided.
+        """
+        actor_actions = []
+
+        # extract each actors' expected actions for their local states
+        for agent_num in range(self.num_instances):
+            prev_index = (agent_num) * self.state_size
+            actor_index = (agent_num + 1) * self.state_size
+
+            actor_state = states[:, prev_index:actor_index]
+            actor_actions.append(self.actor_targets[agent_num](actor_state))
+
+        action_vals_joint = torch.cat(actor_actions, dim=1).to(self.device)
+
+        return action_vals_joint
+
     def compute_critic_vals(self, states, actions, next_states, rewards, dones):
         """
         Compute the critic values for next step target values and current
@@ -199,8 +230,9 @@ class MADDPGAgent(MainAgent):
             Loss value (with grad) based on target and Q-value estimates.
         """
         # compute target and critic values for TD loss
-        next_actor_actions = self.actor_target(next_states)
-        critic_targets = self.critic_target(next_states, next_actor_actions)
+        next_actor_actions_joint = self.get_current_actions(next_states)
+        critic_targets = self.critic_target(next_states,
+                                            next_actor_actions_joint)
 
         # compute loss for critic
         done_v = 1 - dones
@@ -234,12 +266,11 @@ class MADDPGAgent(MainAgent):
         torch.float32
             Loss value (with grad) based on target and Q-value estimates.
         """
-        loss = F.mse_loss(target_vals.view(-1, agent_num),
-                          critic_vals.view(-1, agent_num))
+        loss = F.mse_loss(target_vals[:, agent_num], critic_vals[:, agent_num])
 
         return loss
 
-    def compute_actor_loss(self, states, actions, agent_num):
+    def compute_actor_loss(self, states, agent_num):
         """
         Compute the loss based on the information provided and the value /
         policy parameterizations used in the algorithm.
@@ -264,8 +295,9 @@ class MADDPGAgent(MainAgent):
         torch.float32
             Loss value (with grad) based on target and Q-value estimates.
         """
-        cur_a = self.actors[agent_num](states)
-        #TODO: How to use critic without other actors information?
+        cur_a = self.get_current_actions(states)
+        q_vals = self.critic(states, cur_a)
+        policy_loss = -torch.mean(q_vals[:, agent_num])
 
         return policy_loss
 
@@ -323,10 +355,9 @@ class MADDPGAgent(MainAgent):
 
                     targets, estimates = self.compute_critic_vals(s, a, s_p,
                                                                   r, d)
-
                     loss = self.compute_critic_loss(targets, estimates,
                                                     agent_i)
-                    policy_loss = self.compute_actor_loss(s, a)
+                    policy_loss = self.compute_actor_loss(s, agent_i)
 
                     # train the critic and actor separately
                     self.train_critic(loss, agent_i)

@@ -40,7 +40,7 @@ class JointCriticNetwork(nn.Module):
         self.seed = seed
         torch.manual_seed(self.seed)
 
-        super(CriticNetwork, self).__init__()
+        super(JointCriticNetwork, self).__init__()
 
         # initialize the architecture
         self._init_model()
