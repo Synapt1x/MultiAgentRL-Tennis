@@ -19,6 +19,7 @@ from torch.autograd import Variable
 
 from tennis.torch_models.actor_net import ActorNetwork
 from tennis.torch_models.critic_net import CriticNetwork
+from tennis.torch_models.joint_critic_net import JointCriticNetwork
 from tennis.replay_buffer import ReplayBuffer
 from tennis import utils
 
@@ -58,6 +59,7 @@ class MainAgent:
         self.t_freq = kwargs.get('t_freq', 10)
         self.tau = kwargs.get('tau', 0.1)
         self.inter_dims = kwargs.get('inter_dims', [64, 256])
+        self.use_batch_norm = kwargs.get('use_batch_norm', False)
 
         # extract parameters specific to replay buffer
         self.buffer_size = kwargs.get('buffer_size', 1E6)
@@ -102,12 +104,34 @@ class MainAgent:
 
     def _init_critic(self):
         """
-        Initialize actor network.
+        Initialize critic network.
         """
         critic = CriticNetwork(self.state_size, self.action_size,
-                               self.inter_dims).to(self.device)
+                               self.inter_dims,
+                               use_batch_norm=self.use_batch_norm
+                               ).to(self.device)
         critic_target = CriticNetwork(self.state_size, self.action_size,
-                                      self.inter_dims).to(self.device)
+                                      self.inter_dims,
+                                      use_batch_norm=self.use_batch_norm
+                                      ).to(self.device)
+        critic_target = utils.copy_weights(critic, critic_target)
+
+        return critic, critic_target
+
+    def _init_joint_critic(self):
+        """
+        Initialize joint critic network.
+        """
+        critic = JointCriticNetwork(self.state_size, self.action_size,
+                                    self.inter_dims,
+                                    use_batch_norm=self.use_batch_norm,
+                                    num_instances=self.num_instances
+                                    ).to(self.device)
+        critic_target = JointCriticNetwork(self.state_size, self.action_size,
+                                           self.inter_dims,
+                                           use_batch_norm=self.use_batch_norm,
+                                           num_instances=self.num_instances
+                                           ).to(self.device)
         critic_target = utils.copy_weights(critic, critic_target)
 
         return critic, critic_target

@@ -45,27 +45,24 @@ class MADDPGAgent(MainAgent):
         """
         self.actors = []
         self.actor_targets = []
-        self.critics = []
-        self.critic_targets = []
         self.actor_optimizers = []
-        self.critic_optimizers = []
 
-        # initialize networks separately for each agent
-        for network_i in range(self.num_instances):
+        # initialize actor networks separately for each agent
+        for _ in range(self.num_instances):
             actor, actor_target = self._init_actor()
-            critic, critic_target = self._init_critic()
 
             # store networks for this agent
             self.actors.append(actor)
             self.actor_targets.append(actor_target)
-            self.critics.append(critic_target)
-            self.critic_targets.append(critic_target)
 
             # initializer optimizers
             self.actor_optimizers.append(optim.Adam(actor.parameters(),
                                                     lr=self.actor_alpha))
-            self.critic_optimizers.append(optim.Adam(critic.parameters(),
-                                                     lr=self.critic_alpha))
+
+        self.critic, self.critic_target = self._init_critic()
+        self.critic_optimizer = optim.Adam(self.critic.parameters(),
+                                           lr=self.critic_alpha)
+
 
         # initialize the replay buffer
         self.memory = ReplayBuffer(self.buffer_size, self.batch_size,
@@ -176,8 +173,43 @@ class MADDPGAgent(MainAgent):
 
         return action_vals
 
-    def compute_loss(self, states, actions, next_states, rewards, dones,
-                     obs, next_obs, agent_num):
+    def compute_critic_vals(self, states, actions, next_states, rewards, dones):
+        """
+        Compute the critic values for next step target values and current
+        estimates for values.
+
+        Parameters
+        ----------
+        states: np.array/torch.Tensor
+            Array or Tensor singleton or batch containing states information
+        actions: np.array/torch.Tensor
+            Array or Tensor singleton or batch containing actions taken
+        next_states: np.array/torch.Tensor
+            Array or Tensor singleton or batch containing information about what
+            state followed actions taken from the states provided by 'state'
+        rewards: np.array/torch.Tensor
+            Array or Tensor singleton or batch containing reward information
+        dones: np.array/torch.Tensor
+            Array or Tensor singleton or batch representing whether or not the
+            episode ended after actions were taken
+
+        Returns
+        -------
+        torch.float32
+            Loss value (with grad) based on target and Q-value estimates.
+        """
+        # compute target and critic values for TD loss
+        next_actor_actions = self.actor_target(next_states)
+        critic_targets = self.critic_target(next_states, next_actor_actions)
+
+        # compute loss for critic
+        done_v = 1 - dones
+        target_vals = rewards + self.gamma * critic_targets.squeeze(1) * done_v
+        critic_vals = self.critic(states, actions)
+
+        return target_vals, critic_vals
+
+    def compute_critic_loss(self, target_vals, critic_vals, agent_num):
         """
         Compute the loss based on the information provided and the value /
         policy parameterizations used in the algorithm.
@@ -202,25 +234,40 @@ class MADDPGAgent(MainAgent):
         torch.float32
             Loss value (with grad) based on target and Q-value estimates.
         """
-        # compute target and critic values for TD loss
-        next_actor_actions = self.actor_targets[agent_num](next_obs)
-        #TODO: Need to figure out how to handle batch size if using obs
-        critic_targets = self.critic_targets[agent_num](next_states,
-                                                        next_actor_actions)
+        loss = F.mse_loss(target_vals.view(-1, agent_num),
+                          critic_vals.view(-1, agent_num))
 
-        # compute loss for critic
-        done_v = 1 - dones
-        target_vals = rewards + self.gamma * critic_targets.squeeze(1) * done_v
-        critic_vals = self.critics[agent_num](states, actions)
+        return loss
 
-        loss = F.mse_loss(target_vals, critic_vals)
+    def compute_actor_loss(self, states, actions, agent_num):
+        """
+        Compute the loss based on the information provided and the value /
+        policy parameterizations used in the algorithm.
 
-        # then compute loss for actor
-        cur_actor_actions = self.actors[agent_num](obs)
-        policy_loss = self.critics[agent_num](states, cur_actor_actions)
-        policy_loss = -policy_loss.mean()
+        Parameters
+        ----------
+        states: np.array/torch.Tensor
+            Array or Tensor singleton or batch containing states information
+        actions: np.array/torch.Tensor
+            Array or Tensor singleton or batch containing actions taken
+        next_states: np.array/torch.Tensor
+            Array or Tensor singleton or batch containing information about what
+            state followed actions taken from the states provided by 'state'
+        rewards: np.array/torch.Tensor
+            Array or Tensor singleton or batch containing reward information
+        dones: np.array/torch.Tensor
+            Array or Tensor singleton or batch representing whether or not the
+            episode ended after actions were taken
 
-        return loss, policy_loss
+        Returns
+        -------
+        torch.float32
+            Loss value (with grad) based on target and Q-value estimates.
+        """
+        cur_a = self.actors[agent_num](states)
+        #TODO: How to use critic without other actors information?
+
+        return policy_loss
 
     def train_critic(self, loss, agent_num):
         """
@@ -274,13 +321,12 @@ class MADDPGAgent(MainAgent):
                 for agent_i in range(self.num_instances):
                     s, a, s_p, r, d = self.memory.sample()
 
-                    state_t = utils.to_tensor(states[agent_i])
-                    next_state_t = utils.to_tensor(next_states[agent_i])
+                    targets, estimates = self.compute_critic_vals(s, a, s_p,
+                                                                  r, d)
 
-                    loss, policy_loss = self.compute_loss(s, a, s_p, r, d,
-                                                          state_t,
-                                                          next_state_t,
-                                                          agent_i)
+                    loss = self.compute_critic_loss(targets, estimates,
+                                                    agent_i)
+                    policy_loss = self.compute_actor_loss(s, a)
 
                     # train the critic and actor separately
                     self.train_critic(loss, agent_i)
