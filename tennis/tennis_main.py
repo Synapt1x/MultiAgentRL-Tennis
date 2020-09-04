@@ -75,18 +75,6 @@ class TennisMain:
             return MADDPGAgent(**model_params, state_size=state_size,
                                action_size=action_size, num_instances=num_agents,
                                t_update=t_update, num_updates=num_updates)
-        elif alg.lower() == 'd4pg':
-            # init D4PG
-            from tennis.agents.d4pg_agent import D4PGAgent
-            return D4PGAgent(**model_params, state_size=state_size,
-                             action_size=action_size, num_instances=num_agents,
-                             t_update=t_update, num_updates=num_updates)
-        elif alg.lower() == 'ppo':
-            # init PPO
-            from tennis.agents.ppo_agent import PPOAgent
-            return PPOAgent(**model_params, state_size=state_size,
-                            action_size=action_size, num_instances=num_agents,
-                            t_update=t_update, num_updates=num_updates)
         else:
             # default to random
             from tennis.agents.agent import MainAgent
