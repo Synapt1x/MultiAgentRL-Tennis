@@ -87,7 +87,7 @@ class TennisMain:
         Store scores from an episode into running storage.
         """
         # store average over agents
-        self.score_store.append(np.mean(scores))
+        self.score_store.append(np.max(scores))
 
         # also store average over last 100 episodes over agent average
         score_avg = np.mean(self.score_store[-100:])
@@ -317,7 +317,7 @@ class TennisMain:
 
                 self._update_scores(scores)
 
-                print(f'* Episode {episode} completed * avg: {np.mean(scores)} *')
+                print(f'* Episode {episode} completed * max: {np.max(scores)} *')
                 self._store_losses(end_t - start_t)
 
                 episode += 1
