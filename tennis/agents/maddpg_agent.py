@@ -301,14 +301,14 @@ class MADDPGAgent(MainAgent):
 
         return policy_loss
 
-    def train_critic(self, loss, agent_num):
+    def train_critic(self, loss):
         """
         """
-        self.critic[agent_num].train()
-        self.critic_optimizers[agent_num].zero_grad()
+        self.critic.train()
+        self.critic_optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.critics[agent_num].parameters(), 1)
-        self.critic_optimizer[agent_num].step()
+        torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 1)
+        self.critic_optimizer.step()
 
     def train_actor(self, policy_loss, agent_num):
         """
@@ -360,7 +360,7 @@ class MADDPGAgent(MainAgent):
                     policy_loss = self.compute_actor_loss(s, agent_i)
 
                     # train the critic and actor separately
-                    self.train_critic(loss, agent_i)
+                    self.train_critic(loss)
                     self.train_actor(policy_loss, agent_i)
 
                     self.step(agent_i)
@@ -384,5 +384,5 @@ class MADDPGAgent(MainAgent):
             self.actors[agent_num], self.actor_targets[agent_num], self.tau)
 
         # update critic target network
-        self.critic_targets[agent_num] = utils.copy_weights(
-            self.critics[agent_num], self.critic_targets[agent_num], self.tau)
+        self.critic_target = utils.copy_weights(self.critic, self.critic_target,
+                                                self.tau)
