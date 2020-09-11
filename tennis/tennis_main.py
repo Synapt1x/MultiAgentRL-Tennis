@@ -90,7 +90,7 @@ class TennisMain:
         self.score_store.append(np.max(scores))
 
         # also store average over last 100 episodes over agent average
-        score_avg = np.mean(self.score_store[-100:])
+        score_avg = np.nanmean(self.score_store[-100:])
         self.average_scores.append(score_avg)
 
     def _store_losses(self, time_diff):
@@ -268,7 +268,7 @@ class TennisMain:
                                                   agent_num=i,
                                                   in_train=False)
                 raw_actions.append(actions_i)
-                np_actions[i] = actions_i.numpy()
+                np_actions[i] = actions_i.cpu().numpy()
             actions = utils.to_tensor(raw_actions)
             env_info = self.env.step(np_actions)[self.brain_name]
             next_states, rewards, dones = utils.eval_state(env_info)

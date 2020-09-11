@@ -86,8 +86,12 @@ class MADDPGAgent(MainAgent):
         """
         Get the current state of the agent as it's training.
         """
-        avg_critic_loss = np.mean(self.critic_loss_avgs)
-        avg_actor_loss = np.mean(self.actor_loss_avgs)
+        if len(self.critic_loss_avgs) == 0:
+            avg_critic_loss = 0.0
+            avg_actor_loss = 0.0
+        else:
+            avg_critic_loss = np.nanmean(self.critic_loss_avgs)
+            avg_actor_loss = np.nanmean(self.actor_loss_avgs)
 
         if verbose:
             print('----------------------------------')
@@ -368,8 +372,8 @@ class MADDPGAgent(MainAgent):
                     critic_losses.append(loss.item())
                     actor_losses.append(policy_loss.item())
 
-            self.critic_loss_avgs.append(np.mean(critic_losses))
-            self.actor_loss_avgs.append(np.mean(actor_losses))
+            self.critic_loss_avgs.append(np.nanmean(critic_losses))
+            self.actor_loss_avgs.append(np.nanmean(actor_losses))
 
         # update time step counter
         self.t += 1
