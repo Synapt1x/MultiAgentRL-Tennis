@@ -268,7 +268,7 @@ class TennisMain:
                                                   agent_num=i,
                                                   in_train=False)
                 raw_actions.append(actions_i)
-                np_actions[i] = actions_i.numpy()
+                np_actions[i] = actions_i.cpu().numpy()
             actions = utils.to_tensor(raw_actions)
             env_info = self.env.step(np_actions)[self.brain_name]
             next_states, rewards, dones = utils.eval_state(env_info)
