@@ -112,13 +112,17 @@ class MADDPGAgent(MainAgent):
         file_name: str
             File name to which the agent will be saved for future use.
         """
-        actor, actor_t, critic, critic_t = utils.extract_model_names(main_file)
+        a_name, a_t_name, c_name, c_t_name = utils.extract_model_names(
+            main_file)
 
-        utils.save_model(self.actor, actor)
-        utils.save_model(self.actor_target, actor_t)
+        for actor_i, actor, actor_target in enumerate(zip(self.actors,
+                                                          self.actor_targets)):
+            utils.save_model(actor, a_name.replace('.pkl', f'-{actor_i}.pkl'))
+            utils.save_model(actor_target,
+                             a_t_name.replace('.pkl', f'-{actor_i}.pkl'))
 
-        utils.save_model(self.critic, critic)
-        utils.save_model(self.critic_target, critic_t)
+        utils.save_model(self.critic, c_name)
+        utils.save_model(self.critic_target, c_t_name)
 
     def load_model(self, main_file):
         """
@@ -129,14 +133,21 @@ class MADDPGAgent(MainAgent):
         file_name: str
             File name from which the agent will be loaded.
         """
-        actor, actor_t, critic, critic_t = utils.extract_model_names(main_file)
+        a_name, a_t_name, c_name, c_t_name = utils.extract_model_names(
+            main_file)
 
-        self.actor = utils.load_model(self.actor, actor, self.device)
-        self.actor_target = utils.load_model(self.actor_target, actor_t,
-                                             self.device)
+        for actor_i, actor, actor_target in enumerate(zip(self.actors,
+                                                          self.actor_targets)):
+            actor = utils.load_model(actor,
+                                     a_name.replace('.pkl', f'-{actor_i}.pkl'),
+                                     self.device)
+            actor_target = utils.load_model(
+                actor_target,
+                a_t_name.replace('.pkl', f'-{actor_i}.pkl'),
+                self.device)
 
-        self.critic = utils.load_model(self.critic, critic, self.device)
-        self.critic_target = utils.load_model(self.critic_target, critic_t,
+        self.critic = utils.load_model(self.critic, c_name, self.device)
+        self.critic_target = utils.load_model(self.critic_target, c_t_name,
                                               self.device)
 
     def get_noise(self):

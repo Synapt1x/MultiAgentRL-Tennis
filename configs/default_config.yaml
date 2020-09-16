@@ -19,7 +19,7 @@ num_updates: 5 # number of network updates to complete in a time step
 # model parameters
 model_params:
   # training parameters
-  gamma: 0.99
+  gamma: 0.95
   actor_alpha: 0.0001
   critic_alpha: 0.0005
   t_freq: 100
@@ -32,13 +32,13 @@ model_params:
   mu: 0.0
   # general noise
   epsilon: 1.0
-  epsilon_decay: 0.9999
+  epsilon_decay: 0.99995
   epsilon_min: 0.01
   noise_variance: 0.5
 
   # parameters for the replay buffer
   buffer_size: 1000000
-  batch_size: 32
+  batch_size: 256
 
   # architecture
   inter_dims: [256, 512, 1024]
