@@ -11,10 +11,10 @@ alg: 'maddpg'
 
 # parameters for printing and controlling learning time
 frame_time: 0.00
-max_episodes: 2500
+max_episodes: 4000
 max_iterations: 10000
-t_update: 10  # number of time steps to take before update
-num_updates: 10 # number of network updates to complete in a time step
+t_update: 2  # number of time steps to take before update
+num_updates: 5 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
@@ -32,16 +32,16 @@ model_params:
   mu: 0.0
   # general noise
   epsilon: 1.0
-  epsilon_decay: 0.9995
+  epsilon_decay: 0.9999
   epsilon_min: 0.01
   noise_variance: 0.5
 
   # parameters for the replay buffer
   buffer_size: 1000000
-  batch_size: 256
+  batch_size: 32
 
   # architecture
-  inter_dims: [256, 512]
+  inter_dims: [256, 512, 1024]
   use_batch_norm: False
 
   # parameters specific to PPO
