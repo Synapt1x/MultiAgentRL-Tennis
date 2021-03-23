@@ -13,8 +13,8 @@ alg: 'maddpg'
 frame_time: 0.00
 max_episodes: 4000
 max_iterations: 10000
-t_update: 2  # number of time steps to take before update
-num_updates: 5 # number of network updates to complete in a time step
+t_update: 1  # number of time steps to take before update
+num_updates: 4 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
@@ -30,6 +30,7 @@ model_params:
   theta: 0.3
   sigma: 0.3
   mu: 0.0
+  decay: 1.0
   # general noise
   epsilon: 1.0
   epsilon_decay: 0.99995
@@ -42,7 +43,7 @@ model_params:
 
   # architecture
   inter_dims: [256, 512, 1024]
-  use_batch_norm: False
+  use_batch_norm: True
 
   # parameters specific to PPO
   eps_clip: 0.05

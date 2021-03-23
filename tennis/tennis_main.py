@@ -9,8 +9,6 @@ For Deep Reinforcement Learning Nanodegree offered by Udacity.
 
 
 import os
-import argparse
-import datetime
 import pickle
 import time
 

@@ -36,10 +36,11 @@ class OrnsteinUhlenbeck():
     """
 
     def __init__(self, theta=0.15, mu=0.0, sigma=0.2, action_size=4,
-                 seed=13):
+                 decay=0.9996, seed=13):
         self.theta = theta
         self.mu = mu * np.ones(action_size)
         self.orig_sigma = sigma
+        self.decay = decay
         self.action_size = action_size
         self.seed = seed
 
@@ -87,7 +88,7 @@ class OrnsteinUhlenbeck():
         """
         Update any time-step parameters.
         """
-        self.sigma = self.sigma * 0.998
+        self.sigma = self.sigma * self.decay
 
 
 if __name__ == '__main__':

@@ -79,6 +79,7 @@ class MainAgent:
         # initialize parameters for Ornstein
         self.theta = kwargs.get('theta', 0.15)
         self.sigma = kwargs.get('sigma', 0.20)
+        self.decay = kwargs.get('decay', 1.0)
         noise_variance = kwargs.get('noise_variance', 0.3)
 
         self._init_alg()
@@ -155,7 +156,8 @@ class MainAgent:
             from tennis.noise_processes.noise_process import OrnsteinUhlenbeck
 
             return OrnsteinUhlenbeck(theta=self.theta, sigma=self.sigma,
-                                     action_size=self.action_size)
+                                     action_size=self.action_size,
+                                     decay=self.decay)
         else:
             from tennis.noise_processes.normal_noise import NormalNoise
 
