@@ -14,7 +14,7 @@ frame_time: 0.00
 max_episodes: 2000
 max_iterations: 10000
 t_update: 1  # number of time steps to take before update
-num_updates: 12 # number of network updates to complete in a time step
+num_updates: 2 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
