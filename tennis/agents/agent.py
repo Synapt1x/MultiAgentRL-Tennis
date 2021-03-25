@@ -107,11 +107,13 @@ class MainAgent:
         """
         Initialize critic network.
         """
-        critic = CriticNetwork(self.state_size, self.action_size,
+        critic = CriticNetwork(self.state_size,
+                               self.action_size * self.num_instances,
                                self.inter_dims,
                                use_batch_norm=self.use_batch_norm
                                ).to(self.device)
-        critic_target = CriticNetwork(self.state_size, self.action_size,
+        critic_target = CriticNetwork(self.state_size,
+                                      self.action_size * self.num_instances,
                                       self.inter_dims,
                                       use_batch_norm=self.use_batch_norm
                                       ).to(self.device)

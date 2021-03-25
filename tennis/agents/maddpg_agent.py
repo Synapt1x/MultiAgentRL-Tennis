@@ -46,6 +46,9 @@ class MADDPGAgent(MainAgent):
         self.actors = []
         self.actor_targets = []
         self.actor_optimizers = []
+        self.critics = []
+        self.critic_targets = []
+        self.critic_optimizers = []
 
         # initialize actor networks separately for each agent
         for _ in range(self.num_instances):
@@ -59,10 +62,14 @@ class MADDPGAgent(MainAgent):
             self.actor_optimizers.append(optim.Adam(actor.parameters(),
                                                     lr=self.actor_alpha))
 
-        self.critic, self.critic_target = self._init_joint_critic()
-        self.critic_optimizer = optim.Adam(self.critic.parameters(),
-                                           lr=self.critic_alpha)
+            # similarly initialuze critics for each agent
+            critic, critic_target = self._init_critic()
 
+            self.critics.append(critic)
+            self.critic_targets.append(critic_target)
+
+            self.critic_optimizers.append(optim.Adam(critic.parameters(),
+                                                     lr=self.critic_alpha))
 
         # initialize the replay buffer
         self.memory = ReplayBuffer(self.buffer_size, self.batch_size,
@@ -117,12 +124,20 @@ class MADDPGAgent(MainAgent):
 
         for actor_i, actor, actor_target in enumerate(zip(self.actors,
                                                           self.actor_targets)):
-            utils.save_model(actor, a_name.replace('.pkl', f'-{actor_i}.pkl'))
-            utils.save_model(actor_target,
-                             a_t_name.replace('.pkl', f'-{actor_i}.pkl'))
+            filled_a_name = a_name.replace('.pkl', f'-{actor_i}.pkl')
+            filled_a_t_name = a_t_name.replace('.pkl', f'-{actor_i}.pkl'),
+            actor = utils.save_model(actor, filled_a_name, self.device)
+            actor_target = utils.save_model(actor_target, filled_a_t_name,
+                                            self.device)
 
-        utils.save_model(self.critic, c_name)
-        utils.save_model(self.critic_target, c_t_name)
+        for critic_i, critic, critic_target in enumerate(zip(self.critics,
+                                                             self.critic_targets)):
+            filled_c_name = c_name.replace('.pkl', f'-{critic_i}.pkl')
+            filled_c_t_name = c_name.replace('.pkl', f'-{critic_i}.pkl')
+            self.critic = utils.save_model(critic, filled_c_name, self.device)
+            self.critic_target = utils.save_model(critic_target,
+                                                  filled_c_t_name,
+                                                  self.device)
 
     def load_model(self, main_file):
         """
@@ -138,24 +153,27 @@ class MADDPGAgent(MainAgent):
 
         for actor_i, actor, actor_target in enumerate(zip(self.actors,
                                                           self.actor_targets)):
-            actor = utils.load_model(actor,
-                                     a_name.replace('.pkl', f'-{actor_i}.pkl'),
-                                     self.device)
-            actor_target = utils.load_model(
-                actor_target,
-                a_t_name.replace('.pkl', f'-{actor_i}.pkl'),
-                self.device)
+            filled_a_name = a_name.replace('.pkl', f'-{actor_i}.pkl')
+            filled_a_t_name = a_t_name.replace('.pkl', f'-{actor_i}.pkl'),
+            actor = utils.load_model(actor, filled_a_name, self.device)
+            actor_target = utils.load_model(actor_target, filled_a_t_name,
+                                            self.device)
 
-        self.critic = utils.load_model(self.critic, c_name, self.device)
-        self.critic_target = utils.load_model(self.critic_target, c_t_name,
-                                              self.device)
+        for critic_i, critic, critic_target in enumerate(zip(self.critics,
+                                                             self.critic_targets)):
+            filled_c_name = c_name.replace('.pkl', f'-{critic_i}.pkl')
+            filled_c_t_name = c_name.replace('.pkl', f'-{critic_i}.pkl')
+            self.critic = utils.load_model(critic, filled_c_name, self.device)
+            self.critic_target = utils.load_model(critic_target,
+                                                  filled_c_t_name,
+                                                  self.device)
 
     def get_noise(self):
         """
         Sample noise to introduce randomness into the action selection process.
         """
         noise_vals = np.zeros((1, self.action_size))
-        noise_vals = self.noise.sample() * self.epsilon
+        #noise_vals = self.noise.sample() * self.epsilon
         #self.noise.step()
         noise_vals = torch.from_numpy(noise_vals).float().to(self.device)
 
@@ -219,7 +237,8 @@ class MADDPGAgent(MainAgent):
 
         return action_vals_joint
 
-    def compute_critic_vals(self, states, actions, next_states, rewards, dones):
+    def compute_critic_vals(self, states, actions, next_states, next_a, rewards,
+                            dones, agent_num):
         """
         Compute the critic values for next step target values and current
         estimates for values.
@@ -245,14 +264,12 @@ class MADDPGAgent(MainAgent):
             Loss value (with grad) based on target and Q-value estimates.
         """
         # compute target and critic values for TD loss
-        next_actor_actions_joint = self.get_current_actions(next_states)
-        critic_targets = self.critic_target(next_states,
-                                            next_actor_actions_joint)
+        critic_targets = self.critic_targets[agent_num](next_states, next_a)
 
         # compute loss for critic
         done_v = 1 - dones
         target_vals = rewards + self.gamma * critic_targets.squeeze(1) * done_v
-        critic_vals = self.critic(states, actions)
+        critic_vals = self.critics[agent_num](states, actions).squeeze(1)
 
         return target_vals, critic_vals
 
@@ -281,11 +298,11 @@ class MADDPGAgent(MainAgent):
         torch.float32
             Loss value (with grad) based on target and Q-value estimates.
         """
-        loss = F.mse_loss(target_vals[:, agent_num], critic_vals[:, agent_num])
+        loss = F.mse_loss(target_vals, critic_vals)
 
         return loss
 
-    def compute_actor_loss(self, states, agent_num):
+    def compute_actor_loss(self, states, cur_a, agent_num):
         """
         Compute the loss based on the information provided and the value /
         policy parameterizations used in the algorithm.
@@ -310,20 +327,19 @@ class MADDPGAgent(MainAgent):
         torch.float32
             Loss value (with grad) based on target and Q-value estimates.
         """
-        cur_a = self.get_current_actions(states)
-        q_vals = self.critic(states, cur_a)
-        policy_loss = -torch.mean(q_vals[:, agent_num])
+        q_vals = self.critics[agent_num](states, cur_a)
+        policy_loss = -torch.mean(q_vals.squeeze(1))
 
         return policy_loss
 
-    def train_critic(self, loss):
+    def train_critic(self, loss, agent_num):
         """
         """
-        self.critic.train()
-        self.critic_optimizer.zero_grad()
+        self.critics[agent_num].train()
+        self.critic_optimizers[agent_num].zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 1)
-        self.critic_optimizer.step()
+        torch.nn.utils.clip_grad_norm_(self.critics[agent_num].parameters(), 1)
+        self.critic_optimizers[agent_num].step()
 
     def train_actor(self, policy_loss, agent_num):
         """
@@ -368,14 +384,28 @@ class MADDPGAgent(MainAgent):
                 for agent_i in range(self.num_instances):
                     s, a, s_p, r, d = self.memory.sample()
 
-                    targets, estimates = self.compute_critic_vals(s, a, s_p,
-                                                                  r, d)
+                    prev_i = agent_i * self.state_size
+                    next_i = (agent_i + 1) * self.state_size
+
+                    # extract info specific to an agent
+                    s_i = s[:, prev_i:next_i]
+                    s_p_i = s_p[:, prev_i:next_i]
+                    r_i = r[:, agent_i]
+                    d_i = d[:, agent_i]
+
+                    # also get actions for each agent for next and current states
+                    cur_a = self.get_current_actions(s)
+                    a_p = self.get_current_actions(s_p)
+
+                    targets, estimates = self.compute_critic_vals(s_i, a, s_p_i,
+                                                                  a_p, r_i, d_i,
+                                                                  agent_i)
                     loss = self.compute_critic_loss(targets, estimates,
                                                     agent_i)
-                    policy_loss = self.compute_actor_loss(s, agent_i)
+                    policy_loss = self.compute_actor_loss(s_i, cur_a, agent_i)
 
                     # train the critic and actor separately
-                    self.train_critic(loss)
+                    self.train_critic(loss, agent_i)
                     self.train_actor(policy_loss, agent_i)
 
                     self.step(agent_i)
@@ -399,5 +429,5 @@ class MADDPGAgent(MainAgent):
             self.actors[agent_num], self.actor_targets[agent_num], self.tau)
 
         # update critic target network
-        self.critic_target = utils.copy_weights(self.critic, self.critic_target,
-                                                self.tau)
+        self.critic_targets[agent_num] = utils.copy_weights(
+            self.critics[agent_num], self.critic_targets[agent_num], self.tau)
