@@ -14,12 +14,12 @@ frame_time: 0.00
 max_episodes: 2000
 max_iterations: 10000
 t_update: 1  # number of time steps to take before update
-num_updates: 2 # number of network updates to complete in a time step
+num_updates: 5 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
   # training parameters
-  gamma: 0.95
+  gamma: 0.99
   actor_alpha: 0.0001
   critic_alpha: 0.0005
   t_freq: 100
@@ -39,10 +39,10 @@ model_params:
 
   # parameters for the replay buffer
   buffer_size: 1000000
-  batch_size: 1024
+  batch_size: 512
 
   # architecture
-  inter_dims: [256, 512, 1024]
+  inter_dims: [256, 512, 512]
   use_batch_norm: True
 
   # parameters specific to PPO

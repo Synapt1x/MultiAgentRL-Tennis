@@ -206,7 +206,7 @@ class MADDPGAgent(MainAgent):
 
         return action_vals
 
-    def get_current_actions(self, states):
+    def get_current_actions(self, states, agent_i):
         """
         Extract the action values from each agents actor using the current
         states being evaluated in a batch.
@@ -233,6 +233,9 @@ class MADDPGAgent(MainAgent):
             actor_state = states[:, prev_index:actor_index]
             actor_actions.append(self.actor_targets[agent_num](actor_state))
 
+        # reverse if needed for second agent so its from its perspective
+        if agent_i == 1:
+            actor_actions = actor_actions[::-1]
         action_vals_joint = torch.cat(actor_actions, dim=1).to(self.device)
 
         return action_vals_joint
@@ -384,18 +387,22 @@ class MADDPGAgent(MainAgent):
                 for agent_i in range(self.num_instances):
                     s, a, s_p, r, d = self.memory.sample()
 
-                    prev_i = agent_i * self.state_size
-                    next_i = (agent_i + 1) * self.state_size
+                    # prev_i = agent_i * self.state_size
+                    # next_i = (agent_i + 1) * self.state_size
 
-                    # extract info specific to an agent
-                    s_i = s[:, prev_i:next_i]
-                    s_p_i = s_p[:, prev_i:next_i]
-                    r_i = r[:, agent_i]
-                    d_i = d[:, agent_i]
+                    # # extract info specific to an agent
+                    # s_i = s[:, prev_i:next_i]
+                    # s_p_i = s_p[:, prev_i:next_i]
+                    # r_i = r[:, agent_i]
+                    # d_i = d[:, agent_i]
+                    s_i = s[:, :self.state_size]
+                    s_p_i = s_p[:, :self.state_size]
+                    r_i = r[:, 0]
+                    d_i = d[:, 0]
 
                     # also get actions for each agent for next and current states
-                    cur_a = self.get_current_actions(s)
-                    a_p = self.get_current_actions(s_p)
+                    cur_a = self.get_current_actions(s, agent_i)
+                    a_p = self.get_current_actions(s_p, agent_i)
 
                     targets, estimates = self.compute_critic_vals(s_i, a, s_p_i,
                                                                   a_p, r_i, d_i,
