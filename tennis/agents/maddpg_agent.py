@@ -122,17 +122,17 @@ class MADDPGAgent(MainAgent):
         a_name, a_t_name, c_name, c_t_name = utils.extract_model_names(
             main_file)
 
-        for actor_i, actor, actor_target in enumerate(zip(self.actors,
+        for actor_i, (actor, actor_target) in enumerate(zip(self.actors,
                                                           self.actor_targets)):
             filled_a_name = a_name.replace('.pkl', f'-{actor_i}.pkl')
             filled_a_t_name = a_t_name.replace('.pkl', f'-{actor_i}.pkl'),
             utils.save_model(actor, filled_a_name, self.device)
             utils.save_model(actor_target, filled_a_t_name, self.device)
 
-        for critic_i, critic, critic_target in enumerate(zip(self.critics,
+        for critic_i, (critic, critic_target) in enumerate(zip(self.critics,
                                                              self.critic_targets)):
             filled_c_name = c_name.replace('.pkl', f'-{critic_i}.pkl')
-            filled_c_t_name = c_name.replace('.pkl', f'-{critic_i}.pkl')
+            filled_c_t_name = c_t_name.replace('.pkl', f'-{critic_i}.pkl')
             utils.save_model(critic, filled_c_name, self.device)
             utils.save_model(critic_target, filled_c_t_name, self.device)
 
