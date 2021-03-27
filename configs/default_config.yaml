@@ -1,8 +1,8 @@
 # general parameters
 file_path: 'envs/Tennis_Linux_NoVis/Tennis.x86_64'
 # file_path: 'envs/Reacher_Single.app'
-model_file: 'models/first_ddpg.pkl'
-graph_file: 'training-performance.png'
+model_file: 'models/first_ddpg-new.pkl'
+graph_file: 'training-performance-new.png'
 
 ###########################################################################
 # valid values include 'random', 'ddpg'
@@ -11,17 +11,17 @@ alg: 'maddpg'
 
 # parameters for printing and controlling learning time
 frame_time: 0.00
-max_episodes: 2000
+max_episodes: 12000
 max_iterations: 10000
 t_update: 1  # number of time steps to take before update
-num_updates: 2 # number of network updates to complete in a time step
+num_updates: 1 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
   # training parameters
   gamma: 0.99
-  actor_alpha: 0.0001
-  critic_alpha: 0.0005
+  actor_alpha: 0.001
+  critic_alpha: 0.001
   t_freq: 100
   tau: 0.001
 
