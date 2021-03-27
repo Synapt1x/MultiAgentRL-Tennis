@@ -264,7 +264,8 @@ class MADDPGAgent(MainAgent):
             Loss value (with grad) based on target and Q-value estimates.
         """
         # compute target and critic values for TD loss
-        critic_targets = self.critic_targets[agent_num](next_states, next_a)
+        with torch.no_grad():
+            critic_targets = self.critic_targets[agent_num](next_states, next_a)
 
         # compute loss for critic
         done_v = 1 - dones
@@ -347,6 +348,7 @@ class MADDPGAgent(MainAgent):
         self.actors[agent_num].train()
         self.actor_optimizers[agent_num].zero_grad()
         policy_loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.actors[agent_num].parameters(), 1)
         self.actor_optimizers[agent_num].step()
 
     def learn(self, states, actions, next_states, rewards, dones):
@@ -392,10 +394,6 @@ class MADDPGAgent(MainAgent):
                     s_p_i = s_p[:, prev_i:next_i]
                     r_i = r[:, agent_i]
                     d_i = d[:, agent_i]
-                    #s_i = s[:, :self.state_size]
-                    #s_p_i = s_p[:, :self.state_size]
-                    #r_i = r[:, 0]
-                    #d_i = d[:, 0]
 
                     # also get actions for each agent for next and current states
                     cur_a = self.get_current_actions(s, agent_i)

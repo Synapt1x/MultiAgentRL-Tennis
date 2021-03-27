@@ -82,7 +82,7 @@ class OrnsteinUhlenbeck():
         y = self.y + self.uhlenbeck_mu() + self.sigma * self.dw()
         self.y = y
 
-        return y
+        return y * 0.1
 
     def step(self):
         """
