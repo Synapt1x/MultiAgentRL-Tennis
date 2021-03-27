@@ -11,10 +11,10 @@ alg: 'maddpg'
 
 # parameters for printing and controlling learning time
 frame_time: 0.00
-max_episodes: 4000
+max_episodes: 2000
 max_iterations: 10000
-t_update: 1  # number of time steps to take before update
-num_updates: 2 # number of network updates to complete in a time step
+t_update: 5  # number of time steps to take before update
+num_updates: 10 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
@@ -27,10 +27,10 @@ model_params:
 
   # parameters for the Ornstein-Uhlenbeck noise process
   use_ornstein: True
-  theta: 0.2
-  sigma: 0.2
+  theta: 0.15
+  sigma: 0.1
   mu: 0.0
-  decay: 1.0
+  decay: 0.996
   # general noise
   epsilon: 1.0
   epsilon_decay: 0.99995

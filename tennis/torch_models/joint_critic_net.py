@@ -44,7 +44,7 @@ class JointCriticNetwork(nn.Module):
 
         # initialize the architecture
         self._init_model()
-        #self._init_weights()
+        self._init_weights()
 
     def _init_model(self):
         """

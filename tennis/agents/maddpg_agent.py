@@ -233,6 +233,9 @@ class MADDPGAgent(MainAgent):
         # reverse if needed for second agent so its from its perspective
         if agent_i == 1:
             actor_actions = actor_actions[::-1]
+
+        # also detach second actors actions
+        actor_actions[1] = actor_actions[1].detach().to(self.device)
         action_vals_joint = torch.cat(actor_actions, dim=1).to(self.device)
 
         return action_vals_joint
@@ -264,8 +267,7 @@ class MADDPGAgent(MainAgent):
             Loss value (with grad) based on target and Q-value estimates.
         """
         # compute target and critic values for TD loss
-        with torch.no_grad():
-            critic_targets = self.critic_targets[agent_num](next_states, next_a)
+        critic_targets = self.critic_targets[agent_num](next_states, next_a)
 
         # compute loss for critic
         done_v = 1 - dones
