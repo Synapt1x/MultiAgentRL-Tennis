@@ -11,17 +11,17 @@ alg: 'maddpg'
 
 # parameters for printing and controlling learning time
 frame_time: 0.00
-max_episodes: 12000
+max_episodes: 4000
 max_iterations: 10000
 t_update: 1  # number of time steps to take before update
-num_updates: 1 # number of network updates to complete in a time step
+num_updates: 2 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
   # training parameters
   gamma: 0.99
-  actor_alpha: 0.001
-  critic_alpha: 0.001
+  actor_alpha: 0.0001
+  critic_alpha: 0.0001
   t_freq: 100
   tau: 0.001
 
@@ -42,7 +42,7 @@ model_params:
   batch_size: 256
 
   # architecture
-  inter_dims: [128, 128]
+  inter_dims: [256, 512, 1024]
   use_batch_norm: True
 
   # parameters specific to PPO
