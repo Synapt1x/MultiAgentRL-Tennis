@@ -2,7 +2,7 @@
 file_path: 'envs/Tennis_Linux_NoVis/Tennis.x86_64'
 # file_path: 'envs/Reacher_Single.app'
 model_file: 'models/first_ddpg-new.pkl'
-graph_file: 'training-performance-new.png'
+graph_file: 'training-performance-multi-update.png'
 
 ###########################################################################
 # valid values include 'random', 'ddpg'
@@ -13,24 +13,24 @@ alg: 'maddpg'
 frame_time: 0.00
 max_episodes: 2000
 max_iterations: 10000
-t_update: 5  # number of time steps to take before update
-num_updates: 10 # number of network updates to complete in a time step
+t_update: 2  # number of time steps to take before update
+num_updates: 4 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
   # training parameters
   gamma: 0.99
   actor_alpha: 0.0001
-  critic_alpha: 0.0001
+  critic_alpha: 0.0003
   t_freq: 100
   tau: 0.001
 
   # parameters for the Ornstein-Uhlenbeck noise process
   use_ornstein: True
   theta: 0.15
-  sigma: 0.1
+  sigma: 0.2
   mu: 0.0
-  decay: 0.996
+  decay: 0.995
   # general noise
   epsilon: 1.0
   epsilon_decay: 0.99995
@@ -42,7 +42,7 @@ model_params:
   batch_size: 256
 
   # architecture
-  inter_dims: [256, 512, 1024]
+  inter_dims: [256, 512, 512, 1024]
   use_batch_norm: True
 
   # parameters specific to PPO

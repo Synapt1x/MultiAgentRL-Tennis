@@ -231,8 +231,8 @@ class MADDPGAgent(MainAgent):
             actor_actions.append(self.actor_targets[agent_num](actor_state))
 
         # reverse if needed for second agent so its from its perspective
-        if agent_i == 1:
-            actor_actions = actor_actions[::-1]
+        #if agent_i == 1:
+        #    actor_actions = actor_actions[::-1]
 
         # also detach second actors actions
         actor_actions[1] = actor_actions[1].detach().to(self.device)
@@ -301,7 +301,7 @@ class MADDPGAgent(MainAgent):
         torch.float32
             Loss value (with grad) based on target and Q-value estimates.
         """
-        loss = F.mse_loss(target_vals, critic_vals)
+        loss = F.mse_loss(target_vals.detach(), critic_vals)
 
         return loss
 
@@ -392,8 +392,8 @@ class MADDPGAgent(MainAgent):
                     next_i = (agent_i + 1) * self.state_size
 
                     # extract info specific to an agent
-                    s_i = s[:, prev_i:next_i]
-                    s_p_i = s_p[:, prev_i:next_i]
+                    #s_i = s[:, prev_i:next_i]
+                    #s_p_i = s_p[:, prev_i:next_i]
                     r_i = r[:, agent_i]
                     d_i = d[:, agent_i]
 
@@ -401,12 +401,12 @@ class MADDPGAgent(MainAgent):
                     cur_a = self.get_current_actions(s, agent_i)
                     a_p = self.get_current_actions(s_p, agent_i)
 
-                    targets, estimates = self.compute_critic_vals(s_i, a, s_p_i,
+                    targets, estimates = self.compute_critic_vals(s, a, s_p,
                                                                   a_p, r_i, d_i,
                                                                   agent_i)
                     loss = self.compute_critic_loss(targets, estimates,
                                                     agent_i)
-                    policy_loss = self.compute_actor_loss(s_i, cur_a, agent_i)
+                    policy_loss = self.compute_actor_loss(s, cur_a, agent_i)
 
                     # train the critic and actor separately
                     self.train_critic(loss, agent_i)
