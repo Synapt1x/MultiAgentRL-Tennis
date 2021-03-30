@@ -30,7 +30,7 @@ model_params:
   theta: 0.15
   sigma: 0.2
   mu: 0.0
-  decay: 0.995
+  decay: 0.9996
   # general noise
   epsilon: 1.0
   epsilon_decay: 0.99995
