@@ -89,7 +89,7 @@ class MADDPGAgent(MainAgent):
         for actor_i in range(self.num_instances):
             self.actors[actor_i].train()
 
-    def get_status(self, verbose, time_diff):
+    def get_status(self, verbose, time_diff, average=None):
         """
         Get the current state of the agent as it's training.
         """
@@ -103,9 +103,9 @@ class MADDPGAgent(MainAgent):
         if verbose:
             print('----------------------------------')
             print(f'* Time taken : {time_diff} s')
+            print(f'--- Avg score : {average}')
             print(f'--- Critic Loss : {avg_critic_loss}')
             print(f'--- Actor Loss : {avg_actor_loss}')
-            print(f'--- epsilon : {self.epsilon}')
             print('----------------------------------')
 
         return avg_critic_loss, avg_actor_loss
@@ -125,7 +125,7 @@ class MADDPGAgent(MainAgent):
         for actor_i, (actor, actor_target) in enumerate(zip(self.actors,
                                                           self.actor_targets)):
             filled_a_name = a_name.replace('.pkl', f'-{actor_i}.pkl')
-            filled_a_t_name = a_t_name.replace('.pkl', f'-{actor_i}.pkl'),
+            filled_a_t_name = a_t_name.replace('.pkl', f'-{actor_i}.pkl')
             utils.save_model(actor, filled_a_name)
             utils.save_model(actor_target, filled_a_t_name)
 
@@ -170,7 +170,7 @@ class MADDPGAgent(MainAgent):
         Sample noise to introduce randomness into the action selection process.
         """
         noise_vals = np.zeros((1, self.action_size))
-        noise_vals = self.noise.sample() * self.epsilon
+        noise_vals = self.noise.sample()
         noise_vals = torch.from_numpy(noise_vals).float().to(self.device)
 
         return noise_vals

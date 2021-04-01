@@ -45,7 +45,7 @@ class TennisMain:
         self.critic_loss_store = []
         self.actor_loss_store = []
         self.average_scores = []
-        self.solved_score = 0.05
+        self.solved_score = 0.5
 
     def _init_env(self, file_path):
         """
@@ -95,8 +95,8 @@ class TennisMain:
         """
         Print out and store scores from losses.
         """
-        avg_critic_loss, avg_actor_loss = self.agent.get_status(self.verbose,
-                                                                time_diff)
+        avg_critic_loss, avg_actor_loss = self.agent.get_status(
+            self.verbose, time_diff, self.average_scores[-1])
 
         self.critic_loss_store.append(avg_critic_loss)
         self.actor_loss_store.append(avg_actor_loss)
