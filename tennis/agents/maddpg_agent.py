@@ -171,7 +171,6 @@ class MADDPGAgent(MainAgent):
         """
         noise_vals = np.zeros((1, self.action_size))
         noise_vals = self.noise.sample() * self.epsilon
-        self.noise.step()
         noise_vals = torch.from_numpy(noise_vals).float().to(self.device)
 
         return noise_vals
@@ -350,7 +349,7 @@ class MADDPGAgent(MainAgent):
         self.actors[agent_num].train()
         self.actor_optimizers[agent_num].zero_grad()
         policy_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.actors[agent_num].parameters(), 1)
+        #torch.nn.utils.clip_grad_norm_(self.actors[agent_num].parameters(), 1)
         self.actor_optimizers[agent_num].step()
 
     def learn(self, states, actions, next_states, rewards, dones):
@@ -385,11 +384,11 @@ class MADDPGAgent(MainAgent):
             actor_losses = []
 
             for _ in range(self.num_updates):
+                s, a, s_p, r, d = self.memory.sample()
                 for agent_i in range(self.num_instances):
-                    s, a, s_p, r, d = self.memory.sample()
 
-                    prev_i = agent_i * self.state_size
-                    next_i = (agent_i + 1) * self.state_size
+                    #prev_i = agent_i * self.state_size
+                    #next_i = (agent_i + 1) * self.state_size
 
                     # extract info specific to an agent
                     #s_i = s[:, prev_i:next_i]
