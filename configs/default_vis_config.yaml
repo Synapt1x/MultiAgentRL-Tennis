@@ -1,8 +1,8 @@
 # general parameters
 file_path: 'envs/Tennis_Linux_Vis/Tennis.x86_64'
 # file_path: 'envs/Reacher_Single.app'
-model_file: 'models/first_ddpg-new.pkl'
-graph_file: 'training-performance-multi-update.png'
+model_file: 'models/final_maddpg.pkl'
+graph_file: 'training_performance_final.png'
 
 ###########################################################################
 # valid values include 'random', 'ddpg'
@@ -11,10 +11,10 @@ alg: 'maddpg'
 
 # parameters for printing and controlling learning time
 frame_time: 0.00
-max_episodes: 8000
+max_episodes: 2500
 max_iterations: 10000
 t_update: 2  # number of time steps to take before update
-num_updates: 4 # number of network updates to complete in a time step
+num_updates: 5 # number of network updates to complete in a time step
 
 # model parameters
 model_params:

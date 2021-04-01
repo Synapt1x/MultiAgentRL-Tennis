@@ -68,7 +68,7 @@ class TennisMain:
         action_size = self.brain.vector_action_space_size
 
         if alg.lower() == 'maddpg':
-            # init DDPG
+            # init MADDPG
             from tennis.agents.maddpg_agent import MADDPGAgent
             return MADDPGAgent(**model_params, state_size=state_size,
                                action_size=action_size, num_instances=num_agents,
@@ -170,9 +170,9 @@ class TennisMain:
                 ax = fig.gca()
 
                 ax.add_artist(Ellipse((first_solved, self.solved_score),
-                                      width=5, height=1, facecolor='None',
+                                      width=20, height=0.05, facecolor='None',
                                       edgecolor='r', linewidth=3, zorder=10))
-                plt.text(first_solved + 10, int(self.solved_score * 0.8),
+                plt.text(first_solved + 20, int(self.solved_score * 0.6),
                          f'Solved in {first_solved} episodes', color='r',
                          fontsize=14)
 
