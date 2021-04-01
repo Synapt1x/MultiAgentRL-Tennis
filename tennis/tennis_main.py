@@ -308,7 +308,7 @@ class TennisMain:
             # run episodes
             if not train_mode:
                 self.max_episodes = np.max([100, self.max_episodes])
-                self.agent.epsilon = self.epsilon_min
+                self.agent.epsilon = self.agent.epsilon_min
             while episode < self.max_episodes:
                 start_t = time.time()
                 scores = self.run_episode(train_mode=train_mode)
