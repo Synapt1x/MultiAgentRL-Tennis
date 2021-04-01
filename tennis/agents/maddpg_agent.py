@@ -104,8 +104,11 @@ class MADDPGAgent(MainAgent):
             print('----------------------------------')
             print(f'* Time taken : {time_diff} s')
             print(f'--- Avg score : {average}')
+            print('---------')
             print(f'--- Critic Loss : {avg_critic_loss}')
             print(f'--- Actor Loss : {avg_actor_loss}')
+            print('---------')
+            print(f'--- epsilon : {self.epsilon}')
             print('----------------------------------')
 
         return avg_critic_loss, avg_actor_loss
