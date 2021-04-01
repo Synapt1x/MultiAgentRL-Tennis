@@ -170,7 +170,7 @@ class MADDPGAgent(MainAgent):
         Sample noise to introduce randomness into the action selection process.
         """
         noise_vals = np.zeros((1, self.action_size))
-        noise_vals = self.noise.sample()
+        noise_vals = self.noise.sample() * self.epsilon
         noise_vals = torch.from_numpy(noise_vals).float().to(self.device)
 
         return noise_vals
@@ -202,7 +202,7 @@ class MADDPGAgent(MainAgent):
 
         return action_vals
 
-    def get_current_actions(self, states, agent_i):
+    def get_current_actions(self, states, actors, agent_i):
         """
         Extract the action values from each agents actor using the current
         states being evaluated in a batch.
@@ -222,19 +222,18 @@ class MADDPGAgent(MainAgent):
         actor_actions = []
 
         # extract each actors' expected actions for their local states
-        for agent_num in range(self.num_instances):
+        for agent_num, actor in enumerate(actors):
             prev_index = (agent_num) * self.state_size
             actor_index = (agent_num + 1) * self.state_size
 
             actor_state = states[:, prev_index:actor_index]
-            actor_actions.append(self.actor_targets[agent_num](actor_state))
+            actor_actions.append(actor(actor_state))
 
-        # reverse if needed for second agent so its from its perspective
-        #if agent_i == 1:
-        #    actor_actions = actor_actions[::-1]
+        # also detach other actors' actions
+        other_i = np.abs(agent_i - 1)
+        actor_actions[other_i] = actor_actions[other_i].detach().to(self.device)
 
-        # also detach second actors actions
-        actor_actions[1] = actor_actions[1].detach().to(self.device)
+        # concatenate to get action vector
         action_vals_joint = torch.cat(actor_actions, dim=1).to(self.device)
 
         return action_vals_joint
@@ -273,7 +272,7 @@ class MADDPGAgent(MainAgent):
         target_vals = rewards + self.gamma * critic_targets.squeeze(1) * done_v
         critic_vals = self.critics[agent_num](states, actions).squeeze(1)
 
-        return target_vals, critic_vals
+        return target_vals.detach(), critic_vals
 
     def compute_critic_loss(self, target_vals, critic_vals, agent_num):
         """
@@ -384,8 +383,8 @@ class MADDPGAgent(MainAgent):
             actor_losses = []
 
             for _ in range(self.num_updates):
-                s, a, s_p, r, d = self.memory.sample()
                 for agent_i in range(self.num_instances):
+                    s, a, s_p, r, d = self.memory.sample()
 
                     #prev_i = agent_i * self.state_size
                     #next_i = (agent_i + 1) * self.state_size
@@ -397,8 +396,10 @@ class MADDPGAgent(MainAgent):
                     d_i = d[:, agent_i]
 
                     # also get actions for each agent for next and current states
-                    cur_a = self.get_current_actions(s, agent_i)
-                    a_p = self.get_current_actions(s_p, agent_i)
+                    cur_a = self.get_current_actions(s, self.actors,
+                                                     agent_i)
+                    a_p = self.get_current_actions(s_p, self.actor_targets,
+                                                   agent_i)
 
                     targets, estimates = self.compute_critic_vals(s, a, s_p,
                                                                   a_p, r_i, d_i,
@@ -434,3 +435,5 @@ class MADDPGAgent(MainAgent):
         # update critic target network
         self.critic_targets[agent_num] = utils.copy_weights(
             self.critics[agent_num], self.critic_targets[agent_num], self.tau)
+
+        self.decay_epsilon()

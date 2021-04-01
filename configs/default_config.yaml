@@ -31,10 +31,10 @@ model_params:
   sigma: 0.2
   mu: 0.0
   decay: 1.0
-  # general noise
+  # general noise characteristics
   epsilon: 1.0
-  epsilon_decay: 0.99995
-  epsilon_min: 0.01
+  epsilon_decay: 0.9996
+  epsilon_min: 0.025
   noise_variance: 0.5
 
   # parameters for the replay buffer
