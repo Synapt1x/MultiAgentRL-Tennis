@@ -11,10 +11,10 @@ alg: 'maddpg'
 
 # parameters for printing and controlling learning time
 frame_time: 0.00
-max_episodes: 3000
-max_iterations: 10000
+max_episodes: 2500
+max_iterations: 4000
 t_update: 2  # number of time steps to take before update
-num_updates: 5 # number of network updates to complete in a time step
+num_updates: 2 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
@@ -33,8 +33,8 @@ model_params:
   decay: 1.0
   # general noise characteristics
   epsilon: 1.0
-  epsilon_decay: 0.9996
-  epsilon_min: 0.025
+  epsilon_decay: 1.0
+  epsilon_min: 1.0
   noise_variance: 0.5
 
   # parameters for the replay buffer
