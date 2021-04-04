@@ -201,7 +201,7 @@ With these values, the following results were acquired:
 
 ![train-results](docs/images/training.png)
 
-This illustrates that the agents were able to start learning to effectively keep the ball in play and reach a decently stable 100-episode average episode score of +0.5 after 3088 iterations.
+This illustrates that the agents were able to start learning to effectively keep the ball in play and reach a decently stable 100-episode average episode score of +0.5 after 2749 iterations.
 Episode score here again reflecting the maximum score between the two agents playing tennis, each training individually.
 
 These results show that training resulted in slow increases in performance until the agents started to accumulate positively rewarding observation/action patterns in the replay buffer, which helped both agents to rapidly learn how to control their rackets effectively.

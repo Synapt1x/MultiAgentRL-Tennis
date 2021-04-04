@@ -126,12 +126,12 @@
 		\mathop{\mathbb{\text{max}}}_\theta\mathop{\mathbb{E}}_{s\sim D}\left[Q_{\phi}\left(s, \mu_{\theta}(s)\right)\right]
 	\end{equation}
 	
-	Additionally, the \textit{critic} network is only concerned with improving the Q-function approximation, whereby the network evaluates the value of taken actions against the value of predicted actions suggested by the \textit{actor} network. This is very similar from the DQN algorithm, and thus follows a valuation from:
+	Additionally, the \textit{critic} network is only concerned with improving the Q-function approximation, whereby the network evaluates the value of taken actions against the value of predicted actions suggested by the \textit{actor} network. This is remains from the standard DDPG algorithm, and thus follows a valuation from:
 	
 	\begin{equation}
-		Q^*(s, a) = \mathop{\mathbb{E}}_{s' \sim P}\left[r(s, a) + \gamma\mathop{\mathbb{\text{max}}}_{a'}Q^*(s', a')\right]
+		Q^*(s_{both}, a_{both}) = \mathop{\mathbb{E}}_{s'_{both} \sim P}\left[r(s_i, a_i) + \gamma\mathop{\mathbb{\text{max}}}_{a'}Q^*(s'_{both}, a'_{both})\right]
 	\end{equation}
-	for evaluating a Q-function utilizing the Bellman equation for capturing reward and current max estimations on states and actions from the \textit{critic} and \textit{actor} networks.
+	for evaluating a Q-function utilizing the Bellman equation for capturing reward and current max estimations on states and actions from the \textit{critic} and \textit{actor} networks. Here, $s_i$ and $a_i$ come from local values an agent observes, whereas $s_{both}$ and $a_{both}$ come from global information of both agents.
 	
 	Similar to DDPG, noise values are added to the actions of each agent to maintain a level of exploration throughout training, specifically by adding Ornstein-Uhlenbeck noise \cite{ddpg}. During application of the trained models, however, not only are actors now selecting actions using only local information but noise is also removed.
 	
@@ -199,15 +199,15 @@
 	\begin{figure}[!ht]
 		\centering
 		\includegraphics[width=0.75\linewidth]{images/training.png}
-		\caption{Per episode and 100-episode average score for episode scores across both agents (max of both agents for an episode). The environment was solved by both agents by achieving a 100-episode average score of +0.5 over 3088 episodes of training.}
+		\caption{Per episode and 100-episode average score for episode scores across both agents (max of both agents for an episode). The environment was solved by both agents by achieving a 100-episode average score of +0.5 over 2749 episodes of training.}
 		\label{fig:maddpg-results}
 	\end{figure}
 	
 	\FloatBarrier
 	
-	The results in Figure \ref{fig:maddpg-results} illustrate the ability of the MADDPG algorithm to learn to solve the tennis environment in 3088 episodes when leveraging experiences from both agents for \textit{critic} updates and only local agent information for \textit{actor} updates. After all hyperparameter experimentation and other types of modifications to the algorithm, some improvements that seemed to matter most for achieving more stability in training as shown in Fig. \ref{fig:maddpg-results} were simpler architectures, and maintaining a static Ornstein-Uhlenbeck noise process throughout training (i.e., decaying the noise actually resulted in more variable training).
+	The results in Figure \ref{fig:maddpg-results} illustrate the ability of the MADDPG algorithm to learn to solve the tennis environment in 2749 episodes when leveraging experiences from both agents for \textit{critic} updates and only local agent information for \textit{actor} updates. After all hyperparameter experimentation and other types of modifications to the algorithm, some improvements that seemed to matter most for achieving more stability in training as shown in Fig. \ref{fig:maddpg-results} were simpler architectures, and maintaining a static Ornstein-Uhlenbeck noise process throughout training (i.e., decaying the noise actually resulted in more variable training).
 		
-	 Though the agents were able to learn the task well, the stability of learning still left some room for improvement, however, as training proceeded quite rapidly after a certain number of episodes were reached (~2400 epsiodes). This may be due to the nature of the experience replay buffer cycling out low-reward episodes from early in training. Unclear, however, is why training shows a fair amount of instability around the target episode average of +0.5. Once the agents achieve a score of approximately +0.4, training tends to see more diminishing returns and some regression at times. This may be due to the changes in reward values that the updates to \textit{critic} and even \textit{actor} networks are seeing in later episodes, particularly when there are sporadic high reward episodes (+2.6). Despite these observed patterns, training appears to continue to generally improve throughout. More rigorous hyperparameter tuning and/or experimentation with other multi-agent algorithms may prove for more avenues to show better training performance against the MADDPG results shown herein.
+	 Though the agents were able to learn the task well, the stability of learning still left some room for improvement, however, as training proceeded quite rapidly after a certain number of episodes were reached ($\approx$2300 epsiodes). This may be due to the nature of the experience replay buffer cycling out low-reward episodes from early in training. Unclear, however, is why training shows a fair amount of instability around the target episode average of +0.5. Once the agents achieve a score of approximately +0.4, training tends to see more diminishing returns and some regression at times. This may be due to the changes in reward values that the updates to \textit{critic} and even \textit{actor} networks are seeing in later episodes, particularly when there are sporadic high reward episodes (+2.6). Despite these observed patterns, training appears to continue to generally improve throughout. More stable performance above the goal average of +0.5 seems to become more stable towards the end of training as well, around $\approx$3600 episodes. More rigorous hyperparameter tuning and/or experimentation with other multi-agent algorithms may prove for more avenues to show better training performance against the MADDPG results shown herein.
 	
 	\subsection{Next Steps}
 	
@@ -227,11 +227,5 @@
 	
 	\bibliographystyle{unsrt}
 	\bibliography{refs}
-	% \begin{thebibliography}{9}
-	% \bibitem{littman}
-	% Leslie~Pack Kaelbling, Michael~L Littman, and Andrew~W Moore.
-	% \newblock Reinforcement learning: A survey.
-	% \newblock {\em Journal of artificial intelligence research}, 4:237--285, 1996.
-	% \end{thebibliography}
 	
 \end{document}
