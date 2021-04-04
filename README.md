@@ -1,5 +1,4 @@
-# Deep RL Continuous Control - Reacher in Unity-ML
-
+# Multi-Agent RL - Tennis in Unity-ML
 
 Project code for solving a multi-agent learning problem, specifically solving the Tennis environment by training multiple agents to play a two-player game of tennis in Unity-ML.
 Part of my work for the Deep RL Nanodegree on Udacity.
