@@ -29,11 +29,11 @@ Scoring how well the agents are achieving this is done by taking the *maximum* a
 
 A quick example demonstration of the game being played prior to training is shown below, where one agent is controlling the blue racket and the other agent is controlling the red racket:
 
-![untrained-maddpg](https://media.giphy.com/media/U4MI9TJ2xJUgGM9EWz/giphy.gif)
+![untrained-maddpg](https://media.giphy.com/media/q2Pa7RrnT5Ur9mfdrC/giphy.gif)
 
 Contrast this to agents that are now knowledgeable about how to play and can keep the ball in play much better:
 
-![trained-maddpg](https://media.giphy.com/media/U4MI9TJ2xJUgGM9EWz/giphy.gif)
+![trained-maddpg](https://media.giphy.com/media/FPlkJfsQeKaAM4zSNy/giphy.gif)
 
 Again, reaching this point means that the agents have achieved the goal of a 100-episode average score of +0.5.
 
