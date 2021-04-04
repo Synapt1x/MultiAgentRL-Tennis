@@ -74,7 +74,7 @@
 	
 	\subsection{Environment Overview}
 	
-	The environment, called \textit{Tennis}, is a multi-agent learning situation wherein a pair of agents are playing against each other in a game of virtual table tennis. That is, each agent controls a virtual racket that can hit a ball back and forth over a net, if Thus, the task involves two agents that are simultaneously learning how to play tennis against an opponent, which introduces the issue of coordination and competition between agents.
+	The environment, called \textit{Tennis}, is a multi-agent learning situation wherein a pair of agents are playing against each other in a game of virtual table tennis. That is, each agent controls a virtual racket that can hit a ball back and forth over a net. Thus, the task involves two agents that are simultaneously learning how to play tennis against an opponent, which introduces the issue of coordination and competition between agents.
 	
 	For this task, the environment can be summarized as follows:
 	
@@ -216,7 +216,7 @@
 		\item experimenting with different noise processes, specifically examining how effective an explicit Gaussian noise process would be,
 		\item experimenting with different parameters for the Ornstein-Uhlenbeck noise process, particularly for $\theta$ and $\sigma$ for controlling the variance of injected noise,
 		\item experimenting with the idea of introducing differences between the \textit{actor} and \textit{critic} network architectures, thereby introducing more fine-tuned abilities of the networks to capitalize on more quickly learning a policy by learning from actions and values somewhat independently, this may be important especially for capturing aspects of learning from global information (i.e., \textit{critic} learning) than only local information,
-		\item some level of prioritization and weightings by using a prioritized experience replay buffer, which could help ascertain if issues with stability were in fact due to the nature of experiences sampled from the buffer and how more consistent higher reward experiences affected training stability.
+		\item some level of prioritization and weightings by using a prioritized experience replay buffer \cite{prioritized}, which could help ascertain if issues with stability were in fact due to the nature of experiences sampled from the buffer and how more consistent higher reward experiences affected training stability.
 	\end{itemize}
 	
 	With these potential improvements, there are many avenues to still experiment further with MADDPG before moving on to another algorithm. Improvements that are relevant for DDPG may also be feasible for exploration in this logical extension of DDPG into MADDPG as well.

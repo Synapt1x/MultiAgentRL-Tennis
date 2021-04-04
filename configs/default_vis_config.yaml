@@ -11,10 +11,10 @@ alg: 'maddpg'
 
 # parameters for printing and controlling learning time
 frame_time: 0.00
-max_episodes: 3000
-max_iterations: 4000
+max_episodes: 4000
+max_iterations: 5000
 t_update: 2  # number of time steps to take before update
-num_updates: 2 # number of network updates to complete in a time step
+num_updates: 5 # number of network updates to complete in a time step
 
 # model parameters
 model_params:
